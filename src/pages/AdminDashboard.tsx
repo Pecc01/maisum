@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Edit, Package, MapPin, Clock, Users, Share2 } from "lucide-react";
+import { Plus, Trash2, Edit, Package, MapPin, Clock, Users, Share2, Settings } from "lucide-react";
 import { 
   getAllTrackingData, 
   saveTrackingData, 
@@ -65,6 +65,8 @@ const AdminDashboard = () => {
   const [newStepLocation, setNewStepLocation] = useState("");
   const [newStepDate, setNewStepDate] = useState("");
   const [newStepTime, setNewStepTime] = useState("");
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+  const [publicBaseUrl, setPublicBaseUrl] = useState<string>("");
 
   useEffect(() => {
     loadPackages();
@@ -79,6 +81,25 @@ const AdminDashboard = () => {
     setNewUsername("");
     setNewPassword("");
     setIsUsersDialogOpen(true);
+  };
+  const handleOpenConfig = () => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      setPublicBaseUrl(window.localStorage.getItem("publicBaseUrl") || "");
+    } else {
+      setPublicBaseUrl("");
+    }
+    setIsConfigDialogOpen(true);
+  };
+  const handleSaveConfig = () => {
+    if (!publicBaseUrl) {
+      toast({ title: "Informe a URL pública", variant: "destructive" });
+      return;
+    }
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem("publicBaseUrl", publicBaseUrl);
+    }
+    setIsConfigDialogOpen(false);
+    toast({ title: "URL pública configurada" });
   };
 
   const handleCreateUser = () => {
@@ -227,6 +248,7 @@ const AdminDashboard = () => {
     };
 
     saveTrackingData(updatedPackage);
+    saveTrackingToCloud(updatedPackage);
     setCurrentPackage(updatedPackage);
     loadPackages(); // Refresh list
     
@@ -252,6 +274,9 @@ const AdminDashboard = () => {
           <div className="space-x-4">
              <Button variant="outline" onClick={handleOpenUsers}>
               <Users className="mr-2 h-4 w-4" /> Gerenciar Admins
+             </Button>
+             <Button variant="outline" onClick={handleOpenConfig}>
+              <Settings className="mr-2 h-4 w-4" /> Configurar Link
              </Button>
              <Button variant="outline" onClick={handleLogout}>Sair</Button>
              <Button onClick={openNewPackageDialog} className="bg-[#ff5e1e] hover:bg-[#ff5e1e]/90">
@@ -421,6 +446,29 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configurar URL Pública</DialogTitle>
+            <DialogDescription>Defina o domínio para gerar links de compartilhamento</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>URL pública (ex: https://lalamovee-brasil.vercel.app)</Label>
+              <Input
+                placeholder="https://seu-dominio.vercel.app"
+                value={publicBaseUrl}
+                onChange={(e) => setPublicBaseUrl(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfigDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveConfig} className="bg-[#ff5e1e]">Salvar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

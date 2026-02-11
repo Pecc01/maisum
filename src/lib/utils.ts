@@ -32,7 +32,11 @@ export function decodeTrackingData(base64: string): TrackingData | null {
 }
 
 export function buildShareLink(data: TrackingData): string {
-  const base = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
+  let base = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
+  if (typeof window !== "undefined" && window.localStorage) {
+    const configured = window.localStorage.getItem("publicBaseUrl");
+    if (configured) base = configured;
+  }
   if (cloudEnabled) {
     const code = (data.code || "").toUpperCase();
     const payload = encodeTrackingData(data);
